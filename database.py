@@ -13,14 +13,19 @@ class FarmaciaDB:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 nombre TEXT NOT NULL,
                 cantidad INTEGER NOT NULL,
-                fecha_vencimiento DATE NOT NULL
+                fecha_vencimiento DATE NOT NULL,
+                marca TEXT NOT NULL DEFAULT 'Desconocido'
             )
         ''')
+        try:
+            self.cursor.execute("SELECT marca FROM inventario LIMIT 1")
+        except sqlite3.OperationalError:
+            self.cursor.execute("ALTER TABLE inventario ADD COLUMN marca TEXT NOT NULL DEFAULT 'Desconocido'")
         self.conn.commit()
 
-    def registrar_medicamento(self, nombre, cantidad, fecha_vencimiento):
-        self.cursor.execute("INSERT INTO inventario (nombre, cantidad, fecha_vencimiento) VALUES (?, ?, ?)",
-                            (nombre, cantidad, fecha_vencimiento))
+    def registrar_medicamento(self, nombre, cantidad, fecha_vencimiento, marca):
+        self.cursor.execute("INSERT INTO inventario (nombre, cantidad, fecha_vencimiento, marca) VALUES (?, ?, ? ,?)",
+                            (nombre, cantidad, fecha_vencimiento, marca))
         self.conn.commit()
 
     def obtener_todo(self):
@@ -41,5 +46,5 @@ class FarmaciaDB:
     def alertas_criticas(self):
         # Alerta si quedan menos de 5 unidades o vencen en menos de 30 días
         fecha_limite = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
-        self.cursor.execute("SELECT nombre, cantidad, fecha_vencimiento FROM inventario WHERE cantidad <= 5 OR fecha_vencimiento <= ?", (fecha_limite,))
+        self.cursor.execute("SELECT nombre, cantidad, fecha_vencimiento, marca FROM inventario WHERE cantidad <= 5 OR fecha_vencimiento <= ?", (fecha_limite,))
         return self.cursor.fetchall()

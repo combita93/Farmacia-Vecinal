@@ -12,8 +12,28 @@ class FarmaciaComunalApp:
         self.db = FarmaciaDB()
         self.root = root
         self.root.title("Sistema Farmacia Comunal")
-        self.root.geometry("1000x600")
+        self.root.geometry("1150x600")
         self.root.configure(bg=styles.COLOR_FONDO)
+
+        # Configuración de estilos ttk
+        style = ttk.Style()
+        if "clam" in style.theme_names():
+            style.theme_use("clam")
+        
+        style.configure("Treeview", 
+                        background=styles.COLOR_SECUNDARIO,
+                        foreground=styles.COLOR_TEXTO,
+                        rowheight=30,
+                        fieldbackground=styles.COLOR_SECUNDARIO,
+                        font=styles.FUENTE_NORMAL,
+                        borderwidth=0)
+        style.configure("Treeview.Heading", 
+                        background=styles.COLOR_PRIMARIO, 
+                        foreground="white", 
+                        font=styles.FUENTE_NEGRITA,
+                        padding=5)
+        style.map("Treeview.Heading", background=[('active', styles.COLOR_PRIMARIO)])
+        style.map("Treeview", background=[("selected", styles.COLOR_ACCION)])
 
         # Credenciales trabajadores
         self.users = {
@@ -64,21 +84,27 @@ class FarmaciaComunalApp:
         self.ent_fecha = tk.Entry(frame_ingreso)
         self.ent_fecha.grid(row=0, column=5, padx=5)
 
-        btn_guardar = tk.Button(frame_ingreso, text="Ingreso a Bodega", command=self.guardar_datos, bg=styles.COLOR_ACCION, fg="white")
+        tk.Label(frame_ingreso, text="Laboratorio:", font=styles.FUENTE_NEGRITA, bg=styles.COLOR_FONDO).grid(row=0, column=6, padx=5)
+        self.ent_marca = tk.Entry(frame_ingreso)
+        self.ent_marca.grid(row=0, column=7, padx=5)
+
+        btn_guardar = tk.Button(frame_ingreso, text="Ingreso a Bodega", command=self.guardar_datos, bg=styles.COLOR_ACCION, fg="white", font=styles.FUENTE_NEGRITA, relief="flat", cursor="hand2", padx=10, pady=2)
         btn_guardar.grid(row=0, column=8, padx=10, pady=10)
 
         # grilla que muestra toda la información de los medicamentos ingresados en la tabla
-        self.tree = ttk.Treeview(self.root, columns=("ID", "Nombre", "Stock", "Vencimiento"), show="headings")
+        self.tree = ttk.Treeview(self.root, columns=("ID", "Nombre", "Stock", "Vencimiento","Marca"), show="headings")
         # titulos de los encabezados
         self.tree.heading("ID", text="ID")
         self.tree.heading("Nombre", text="Medicamento")
         self.tree.heading("Stock", text="Unidades Disponibles")
         self.tree.heading("Vencimiento", text="fecha de vencimiento")
+        self.tree.heading("Marca", text="Laboratorio")
         # centra el contenido de la grilla que muestra toda la información de los medicamentos ingresados en la tabla
         self.tree.column("ID", width=50, anchor="center")
         self.tree.column("Nombre", width=200, anchor="center")
         self.tree.column("Stock", width=150, anchor="center")
         self.tree.column("Vencimiento", width=150, anchor="center")
+        self.tree.column("Marca", width=150, anchor="center")
 
         # define el tamaño de la grilla (se estira a lo ancho y largo de la pantalla)
         self.tree.pack(fill="both", expand=True, padx=20)
@@ -89,11 +115,11 @@ class FarmaciaComunalApp:
         frame_entrega = tk.LabelFrame(self.root, text="Entrega de medicamentos al publico", bg=styles.COLOR_FONDO, font=styles.STYLE_CONFIG["font_title"])
         frame_entrega.pack(fill="x", padx=20, pady=10)
         # boton de entrega
-        btn_entregar = tk.Button(frame_entrega, text="Entrega de medicamentos", command=self.procesar_entrega, bg=styles.COLOR_PRIMARIO, fg="white")
-        btn_entregar.pack(side="left", padx=10, pady=10)
+        btn_entregar = tk.Button(frame_entrega, text="Entrega de medicamentos", command=self.procesar_entrega, bg=styles.COLOR_PRIMARIO, fg="white", font=styles.FUENTE_NEGRITA, relief="flat", cursor="hand2", padx=15, pady=8)
+        btn_entregar.pack(side="left", padx=20, pady=15)
         # boton de alerta de medicamentos
-        btn_alertas = tk.Button(frame_entrega, text="verificación de medicamentos", command=self.mostrar_alertas, bg=styles.COLOR_ALERTA, fg="white")
-        btn_alertas.pack(side="right", padx=10, pady=10)
+        btn_alertas = tk.Button(frame_entrega, text="Verificación de medicamentos", command=self.mostrar_alertas, bg=styles.COLOR_ALERTA, fg="white", font=styles.FUENTE_NEGRITA, relief="flat", cursor="hand2", padx=15, pady=8)
+        btn_alertas.pack(side="right", padx=20, pady=15)
 
     def guardar_datos(self):
         # validar acceso de bodega de medicamentos
@@ -101,13 +127,14 @@ class FarmaciaComunalApp:
             return
 
         if self.ent_nombre.get() and self.ent_cantidad.get():
-            self.db.registrar_medicamento(self.ent_nombre.get(), int(self.ent_cantidad.get()), self.ent_fecha.get())
+            self.db.registrar_medicamento(self.ent_nombre.get(), int(self.ent_cantidad.get()), self.ent_fecha.get(), self.ent_marca.get())
             messagebox.showinfo("Éxito", "Medicamento registrado en bodega")
             self.actualizar_tabla()
             # Limpiar campos tras guardar
             self.ent_nombre.delete(0, tk.END)
             self.ent_cantidad.delete(0, tk.END)
             self.ent_fecha.delete(0, tk.END)
+            self.ent_marca.delete(0, tk.END)
         else:
             messagebox.showwarning("Campos incompletos", "Porfavor llenar todos los campos")
 
