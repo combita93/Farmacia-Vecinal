@@ -1,183 +1,210 @@
-#libreria para crear las ventanas
-import tkinter as tk
-#llama herramientas de deseño para botones y tablas 
-from tkinter import ttk, messagebox, simpledialog
-#llama la base de datos creada en el otro documento
+import sys
+from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
+                               QHBoxLayout, QGridLayout, QLabel, QLineEdit, 
+                               QPushButton, QTableWidget, QTableWidgetItem, 
+                               QHeaderView, QMessageBox, QInputDialog, QGroupBox, QAbstractItemView)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont, QCursor
+
+# llama la base de datos creada en el otro documento
 from database import FarmaciaDB
-#llama los estilos creados en el otro documento
+# llama los estilos creados en el otro documento
 import styles
 
-class FarmaciaComunalApp:
-    def __init__(self, root):
+class FarmaciaComunalApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
         self.db = FarmaciaDB()
-        self.root = root
-        self.root.title("Sistema Farmacia Comunal")
-        self.root.geometry("1150x600")
-        self.root.configure(bg=styles.COLOR_FONDO)
-
-        # Configuración de estilos ttk
-        style = ttk.Style()
-        if "clam" in style.theme_names():
-            style.theme_use("clam")
+        self.setWindowTitle("Sistema Farmacia Comunal")
+        self.resize(1150, 700)
         
-        style.configure("Treeview", 
-                        background=styles.COLOR_SECUNDARIO,
-                        foreground=styles.COLOR_TEXTO,
-                        rowheight=30,
-                        fieldbackground=styles.COLOR_SECUNDARIO,
-                        font=styles.FUENTE_NORMAL,
-                        borderwidth=0)
-        style.configure("Treeview.Heading", 
-                        background=styles.COLOR_PRIMARIO, 
-                        foreground="white", 
-                        font=styles.FUENTE_NEGRITA,
-                        padding=5)
-        style.map("Treeview.Heading", background=[('active', styles.COLOR_PRIMARIO)])
-        style.map("Treeview", background=[("selected", styles.COLOR_ACCION)])
+        # Aplicar QSS
+        self.setStyleSheet(styles.get_stylesheet())
 
         # Credenciales trabajadores
         self.users = {
-            "bodega": 
-            {
+            "bodega": {
                 "usuario": "juan", 
                 "contraseña": "1234"
             },
-            "entrega": 
-            {
+            "entrega": {
                 "usuario": "carlos", 
                 "contraseña": "4567"
             }
         }
-        #llama la funcion que dibuja los botones y la tabla
+        
+        # Widget principal
+        main_widget = QWidget()
+        self.setCentralWidget(main_widget)
+        self.main_layout = QVBoxLayout(main_widget)
+        self.main_layout.setContentsMargins(30, 30, 30, 30)
+        self.main_layout.setSpacing(25)
+
         self.create_widgets()
-        #actualiza la tabla con los datos de los medicamentos de la base de datos
         self.actualizar_tabla()
 
     def login(self, tipo_acceso):
-        # validador de usuario y contraseña
-        user = simpledialog.askstring("Ingrese el Usuario", f"Usuario para {tipo_acceso}:", parent=self.root)
-        password = simpledialog.askstring("Ingrese la Contraseña", f"Contraseña para {tipo_acceso}:", show='*', parent=self.root)
-        
-        credenciales = self.users[tipo_acceso]
+        # validador de usuario y contraseña usando QInputDialog
+        user, ok1 = QInputDialog.getText(self, "Ingrese el Usuario", f"Usuario para {tipo_acceso}:")
+        if not ok1:
+            return False
+            
+        password, ok2 = QInputDialog.getText(self, "Ingrese la Contraseña", f"Contraseña para {tipo_acceso}:", QLineEdit.Password)
+        if not ok2:
+            return False
+            
+        credenciales = self.users.get(tipo_acceso)
         if user == credenciales["usuario"] and password == credenciales["contraseña"]:
             return True
         else:
-            messagebox.showerror("Error al ingresar", "Usuario o contraseña incorrectos")
+            QMessageBox.critical(self, "Error al ingresar", "Usuario o contraseña incorrectos")
             return False
 
     def create_widgets(self):
         # SECCIÓN DE BODEGA
+        grupo_ingreso = QGroupBox("Ingreso de medicamentos a la bodega")
+        layout_ingreso = QGridLayout(grupo_ingreso)
+        layout_ingreso.setContentsMargins(25, 35, 25, 25)
+        layout_ingreso.setSpacing(15)
 
-        # Módulo de la bodega (como esta costruido todo el campo de la grilla bodega)
-        frame_ingreso = tk.LabelFrame(self.root, text="Ingreso de medicamentos a la bodega", bg=styles.COLOR_FONDO, font=styles.STYLE_CONFIG["font_title"])
-        frame_ingreso.pack(fill="x", padx=20, pady=10)
+        layout_ingreso.addWidget(QLabel("Nombre:"), 0, 0)
+        self.ent_nombre = QLineEdit()
+        self.ent_nombre.setPlaceholderText("Ej. Paracetamol")
+        layout_ingreso.addWidget(self.ent_nombre, 0, 1)
 
-        tk.Label(frame_ingreso, text="Nombre:", font=styles.FUENTE_NEGRITA, bg=styles.COLOR_FONDO).grid(row=0, column=0, padx=5)
-        self.ent_nombre = tk.Entry(frame_ingreso)
-        self.ent_nombre.grid(row=0, column=1, padx=5)
+        layout_ingreso.addWidget(QLabel("Cantidad:"), 0, 2)
+        self.ent_cantidad = QLineEdit()
+        self.ent_cantidad.setPlaceholderText("0")
+        layout_ingreso.addWidget(self.ent_cantidad, 0, 3)
 
-        tk.Label(frame_ingreso, text="Cantidad:", font=styles.FUENTE_NEGRITA, bg=styles.COLOR_FONDO).grid(row=0, column=2, padx=5)
-        self.ent_cantidad = tk.Entry(frame_ingreso)
-        self.ent_cantidad.grid(row=0, column=3, padx=5)
+        layout_ingreso.addWidget(QLabel("Vencimiento:"), 0, 4)
+        self.ent_fecha = QLineEdit()
+        self.ent_fecha.setPlaceholderText("YYYY-MM-DD")
+        layout_ingreso.addWidget(self.ent_fecha, 0, 5)
 
-        tk.Label(frame_ingreso, text="Vencimiento:", font=styles.FUENTE_NEGRITA, bg=styles.COLOR_FONDO).grid(row=0, column=4, padx=5)
-        self.ent_fecha = tk.Entry(frame_ingreso)
-        self.ent_fecha.grid(row=0, column=5, padx=5)
+        layout_ingreso.addWidget(QLabel("Laboratorio:"), 0, 6)
+        self.ent_marca = QLineEdit()
+        self.ent_marca.setPlaceholderText("Marca o Lab")
+        layout_ingreso.addWidget(self.ent_marca, 0, 7)
 
-        tk.Label(frame_ingreso, text="Laboratorio:", font=styles.FUENTE_NEGRITA, bg=styles.COLOR_FONDO).grid(row=0, column=6, padx=5)
-        self.ent_marca = tk.Entry(frame_ingreso)
-        self.ent_marca.grid(row=0, column=7, padx=5)
+        btn_guardar = QPushButton("Ingreso a Bodega")
+        btn_guardar.setObjectName("btn_accion") # Para el estilo QSS
+        btn_guardar.clicked.connect(self.guardar_datos)
+        btn_guardar.setCursor(QCursor(Qt.PointingHandCursor))
+        layout_ingreso.addWidget(btn_guardar, 0, 8)
 
-        btn_guardar = tk.Button(frame_ingreso, text="Ingreso a Bodega", command=self.guardar_datos, bg=styles.COLOR_ACCION, fg="white", font=styles.FUENTE_NEGRITA, relief="flat", cursor="hand2", padx=10, pady=2)
-        btn_guardar.grid(row=0, column=8, padx=10, pady=10)
+        self.main_layout.addWidget(grupo_ingreso)
 
-        # grilla que muestra toda la información de los medicamentos ingresados en la tabla
-        self.tree = ttk.Treeview(self.root, columns=("ID", "Nombre", "Stock", "Vencimiento","Marca"), show="headings")
-        # titulos de los encabezados
-        self.tree.heading("ID", text="ID")
-        self.tree.heading("Nombre", text="Medicamento")
-        self.tree.heading("Stock", text="Unidades Disponibles")
-        self.tree.heading("Vencimiento", text="fecha de vencimiento")
-        self.tree.heading("Marca", text="Laboratorio")
-        # centra el contenido de la grilla que muestra toda la información de los medicamentos ingresados en la tabla
-        self.tree.column("ID", width=50, anchor="center")
-        self.tree.column("Nombre", width=200, anchor="center")
-        self.tree.column("Stock", width=150, anchor="center")
-        self.tree.column("Vencimiento", width=150, anchor="center")
-        self.tree.column("Marca", width=150, anchor="center")
-
-        # define el tamaño de la grilla (se estira a lo ancho y largo de la pantalla)
-        self.tree.pack(fill="both", expand=True, padx=20)
+        # TABLA DE INVENTARIO
+        self.table = QTableWidget()
+        self.table.setColumnCount(5)
+        self.table.setHorizontalHeaderLabels(["ID", "Medicamento", "Unidades Disponibles", "Fecha de Vencimiento", "Laboratorio"])
+        
+        # Configuración de la tabla para aspecto SaaS
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents) # ID mas pequeño
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.table.verticalHeader().setVisible(False)
+        self.table.setShowGrid(False)
+        
+        self.main_layout.addWidget(self.table)
 
         # SECCIÓN DE ENTREGA
+        grupo_entrega = QGroupBox("Gestión y Entrega al público")
+        layout_entrega = QHBoxLayout(grupo_entrega)
+        layout_entrega.setContentsMargins(25, 35, 25, 25)
 
-        # Módulo de entrega (como esta costruido todo el campo de la grilla entrega)
-        frame_entrega = tk.LabelFrame(self.root, text="Entrega de medicamentos al publico", bg=styles.COLOR_FONDO, font=styles.STYLE_CONFIG["font_title"])
-        frame_entrega.pack(fill="x", padx=20, pady=10)
-        # boton de entrega
-        btn_entregar = tk.Button(frame_entrega, text="Entrega de medicamentos", command=self.procesar_entrega, bg=styles.COLOR_PRIMARIO, fg="white", font=styles.FUENTE_NEGRITA, relief="flat", cursor="hand2", padx=15, pady=8)
-        btn_entregar.pack(side="left", padx=20, pady=15)
-        # boton de alerta de medicamentos
-        btn_alertas = tk.Button(frame_entrega, text="Verificación de medicamentos", command=self.mostrar_alertas, bg=styles.COLOR_ALERTA, fg="white", font=styles.FUENTE_NEGRITA, relief="flat", cursor="hand2", padx=15, pady=8)
-        btn_alertas.pack(side="right", padx=20, pady=15)
+        btn_entregar = QPushButton("Entrega de medicamentos")
+        btn_entregar.clicked.connect(self.procesar_entrega)
+        btn_entregar.setCursor(QCursor(Qt.PointingHandCursor))
+        layout_entrega.addWidget(btn_entregar, alignment=Qt.AlignLeft)
+
+        layout_entrega.addStretch() # Espaciador en el medio
+
+        btn_alertas = QPushButton("Verificación de medicamentos")
+        btn_alertas.setObjectName("btn_alerta") # Para el estilo QSS
+        btn_alertas.clicked.connect(self.mostrar_alertas)
+        btn_alertas.setCursor(QCursor(Qt.PointingHandCursor))
+        layout_entrega.addWidget(btn_alertas, alignment=Qt.AlignRight)
+
+        self.main_layout.addWidget(grupo_entrega)
 
     def guardar_datos(self):
-        # validar acceso de bodega de medicamentos
         if not self.login("bodega"):
             return
 
-        if self.ent_nombre.get() and self.ent_cantidad.get():
-            self.db.registrar_medicamento(self.ent_nombre.get(), int(self.ent_cantidad.get()), self.ent_fecha.get(), self.ent_marca.get())
-            messagebox.showinfo("Éxito", "Medicamento registrado en bodega")
-            self.actualizar_tabla()
-            # Limpiar campos tras guardar
-            self.ent_nombre.delete(0, tk.END)
-            self.ent_cantidad.delete(0, tk.END)
-            self.ent_fecha.delete(0, tk.END)
-            self.ent_marca.delete(0, tk.END)
+        nombre = self.ent_nombre.text().strip()
+        cantidad = self.ent_cantidad.text().strip()
+        fecha = self.ent_fecha.text().strip()
+        marca = self.ent_marca.text().strip()
+
+        if nombre and cantidad:
+            try:
+                cant_int = int(cantidad)
+                self.db.registrar_medicamento(nombre, cant_int, fecha, marca)
+                QMessageBox.information(self, "Éxito", "Medicamento registrado en bodega")
+                self.actualizar_tabla()
+                # Limpiar campos
+                self.ent_nombre.clear()
+                self.ent_cantidad.clear()
+                self.ent_fecha.clear()
+                self.ent_marca.clear()
+            except ValueError:
+                QMessageBox.warning(self, "Error", "La cantidad debe ser un número entero.")
         else:
-            messagebox.showwarning("Campos incompletos", "Porfavor llenar todos los campos")
+            QMessageBox.warning(self, "Campos incompletos", "Por favor llenar al menos nombre y cantidad.")
 
     def actualizar_tabla(self):
-        # consulta y borra los registros de la tabla viejos
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-        # inserta los nuevos registros en la tabla
-        for fila in self.db.obtener_todo():
-            self.tree.insert("", "end", values=fila)
+        self.table.setRowCount(0)
+        datos = self.db.obtener_todo()
+        
+        for row_idx, fila in enumerate(datos):
+            self.table.insertRow(row_idx)
+            for col_idx, valor in enumerate(fila):
+                item = QTableWidgetItem(str(valor))
+                item.setTextAlignment(Qt.AlignCenter)
+                self.table.setItem(row_idx, col_idx, item)
 
     def procesar_entrega(self):
-        # revisa si el usuario esta seleccionando un medicamento
-        selected = self.tree.selection()
-        if not selected:
-            messagebox.showwarning("Error", "Porfavor seleccione un medicamento de la lista")
+        selected_rows = self.table.selectedItems()
+        if not selected_rows:
+            QMessageBox.warning(self, "Error", "Por favor seleccione un medicamento de la lista")
             return
-        
-        # solicita credencial de usuario para entregar
-        if not self.login("entrega de medicamentos"):
+            
+        row = selected_rows[0].row()
+        item_id = int(self.table.item(row, 0).text())
+
+        if not self.login("entrega"):
             return
-         # selecciona el medicamento por el ID y le resta de a 1 unidad
-        item_id = self.tree.item(selected)['values'][0]
+            
         exito, nuevo_stock = self.db.entregar_medicamento(item_id, 1)
         
         if exito:
-            messagebox.showinfo("Entrega", "Medicamento entregado con exito" + "\n" + f"Quedan {nuevo_stock} unidades en inventario.")
+            QMessageBox.information(self, "Entrega", f"Medicamento entregado con éxito\nQuedan {nuevo_stock} unidades en inventario.")
             self.actualizar_tabla()
         else:
-            messagebox.showerror("No hay unidades suficiente")
+            QMessageBox.critical(self, "Error", "No hay unidades suficientes.")
 
     def mostrar_alertas(self):
         alertas = self.db.alertas_criticas()
         if not alertas:
-            messagebox.showinfo("Reporte", "No hay medicamentos por vencer o agotarse.")
+            QMessageBox.information(self, "Reporte", "No hay medicamentos por vencer o agotarse.")
             return
         
         mensaje = "PRODUCTOS CON POCO STOCK O POR VENCER:\n\n"
         for a in alertas:
-            mensaje += f"* Medicamento:{a[0]} {a[1]} unidades (Vence: {a[2]})\n"
-        messagebox.showwarning("Alerta de Inventario", mensaje)
+            mensaje += f"• Medicamento: {a[0]} | {a[1]} unidades | Vence: {a[2]}\n"
+        QMessageBox.warning(self, "Alerta de Inventario", mensaje)
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = FarmaciaComunalApp(root)
-    root.mainloop()
+    app = QApplication(sys.argv)
+    
+    # Opcional: configurar una fuente global más moderna si está disponible
+    font = QFont("Segoe UI", 10)
+    app.setFont(font)
+    
+    ventana = FarmaciaComunalApp()
+    ventana.show()
+    sys.exit(app.exec())
