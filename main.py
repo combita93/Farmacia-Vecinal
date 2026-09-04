@@ -8,10 +8,10 @@ from PySide6.QtWidgets import (
     QHBoxLayout, QGridLayout, QLabel, QLineEdit, 
     QPushButton, QTableWidget, QTableWidgetItem, 
     QHeaderView, QMessageBox, QInputDialog, QGroupBox, 
-    QAbstractItemView, QFrame
+    QAbstractItemView, QFrame, QDateEdit
     )
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QDate
 
 # QFont: permite configurar la fuente tipográfica de la aplicación.
 # QCursor: permite cambiar el cursor del mouse (mano al pasar sobre botones).
@@ -397,11 +397,17 @@ class FarmaciaComunalApp(QMainWindow):
         # Agrega la etiqueta "Vencimiento:" en la fila 0, columna 4.
         layout_ingreso.addWidget(QLabel("Vencimiento:"), 0, 4)
 
-        # Crea el campo de texto para la fecha de vencimiento.
-        self.ent_fecha = QLineEdit()
+        # Crea el campo para seleccionar la fecha de vencimiento.
+        self.ent_fecha = QDateEdit()
 
-        # Placeholder que indica el formato esperado de la fecha.
-        self.ent_fecha.setPlaceholderText("YYYY-MM-DD")
+        # Define el formato de la fecha.
+        self.ent_fecha.setDisplayFormat("yyyy-MM-dd")
+
+        # Permite seleccionar la fecha mediante un calendario.
+        self.ent_fecha.setCalendarPopup(True)
+
+        # Define la fecha actual como fecha inicial.
+        self.ent_fecha.setDate(QDate.currentDate())
 
         # Agrega el campo de fecha en la fila 0, columna 5.
         layout_ingreso.addWidget(self.ent_fecha, 0, 5)
@@ -604,10 +610,11 @@ class FarmaciaComunalApp(QMainWindow):
 
         # Obtiene el texto de cada campo del formulario.
         # .strip() elimina espacios en blanco al inicio y final.
-        nombre = self.ent_nombre.text().strip()
+        # .title() convierte la primera letra de cada palabra a mayúscula para evitar medicamentos duplicados.
+        nombre = self.ent_nombre.text().strip().title()
         cantidad = self.ent_cantidad.text().strip()
-        fecha = self.ent_fecha.text().strip()
-        marca = self.ent_marca.text().strip()
+        fecha = self.ent_fecha.date().toString("yyyy-MM-dd")
+        marca = self.ent_marca.text().strip().title()
 
         # Verifica que nombre y cantidad no estén vacíos.
         # Si falta alguno, muestra advertencia y aborta.
