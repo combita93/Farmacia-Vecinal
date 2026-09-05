@@ -5,6 +5,7 @@
 no conoce ventanas ni botones, por eso puede probarse sin iniciar Qt.
 """
 
+import logging
 from datetime import date
 
 from .database import FarmaciaDB
@@ -12,6 +13,7 @@ from .models import InventoryAlert, Medication, UserSession
 
 BODEGA_ROLE = "bodega"
 DELIVERY_ROLE = "entrega"
+LOGGER = logging.getLogger(__name__)
 
 
 class ValidationError(ValueError):
@@ -49,7 +51,13 @@ class InventoryService:
         """Valida y registra un medicamento en el inventario."""
         self._validate_name(medication.name)
         self._validate_positive_quantity(medication.quantity)
-        return self.database.add_medication(medication)
+        registered_medication = self.database.add_medication(medication)
+        LOGGER.info(
+            "Medicamento registrado: nombre=%s, cantidad=%s",
+            registered_medication.name,
+            medication.quantity,
+        )
+        return registered_medication
 
     def deliver(self, medication_id: int, quantity: int) -> Medication:
         """Entrega unidades y devuelve el medicamento con su stock restante."""
@@ -62,6 +70,12 @@ class InventoryService:
         delivered = self.database.decrease_stock(medication_id, quantity)
         if delivered is None:
             raise InsufficientStockError("El stock cambio antes de completar la entrega")
+        LOGGER.info(
+            "Medicamento entregado: id=%s, cantidad=%s, restante=%s",
+            medication_id,
+            quantity,
+            delivered.quantity,
+        )
         return delivered
 
     def update(self, medication: Medication) -> Medication:
@@ -71,12 +85,14 @@ class InventoryService:
             raise ValidationError("La cantidad no puede ser negativa")
         if medication.identifier is None or not self.database.update_medication(medication):
             raise MedicationNotFoundError("El medicamento no existe")
+        LOGGER.info("Medicamento actualizado: id=%s", medication.identifier)
         return self._find_or_raise(medication.identifier)
 
     def delete(self, medication_id: int) -> None:
         """Elimina un medicamento o lanza error si no existe."""
         if not self.database.delete_medication(medication_id):
             raise MedicationNotFoundError("El medicamento no existe")
+        LOGGER.info("Medicamento eliminado: id=%s", medication_id)
 
     def alerts(self, reference_date: date | None = None) -> list[InventoryAlert]:
         """Devuelve alertas tomando como referencia la fecha indicada."""
@@ -118,5 +134,11 @@ class AuthService:
             raise AuthenticationError("El usuario y la contrasena son obligatorios")
         role = self.database.find_user_role(normalized_username, password)
         if role != required_role:
+            LOGGER.warning(
+                "Autenticacion rechazada: usuario=%s, rol=%s",
+                normalized_username,
+                required_role,
+            )
             raise AuthenticationError("Credenciales o rol incorrectos")
+        LOGGER.info("Usuario autenticado: usuario=%s, rol=%s", normalized_username, role)
         return UserSession(normalized_username, role)

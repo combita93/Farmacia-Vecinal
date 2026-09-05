@@ -31,6 +31,7 @@ uv run python -m farmacia_vecinal
 ```
 
 La base de datos `database/farmacia.db` se crea automaticamente junto con la carpeta `database/`. Este archivo es local y esta excluido de Git.
+Los eventos de la aplicacion se muestran en consola y se guardan en `database/logs/farmacia.log`, con rotacion automatica de archivos.
 
 ## Usuarios iniciales
 
@@ -68,6 +69,8 @@ src/farmacia_vecinal/
 ├── models.py         # Modelos inmutables del dominio
 ├── services.py       # Casos de uso y validaciones
 ├── main.py           # Entrada publica
+├── config/            # Configuracion transversal, incluido logging
+│   └── logging_config.py
 └── ui/               # Ventana, widgets y estilos Qt
 	├── main_window.py
 	└── styles.py

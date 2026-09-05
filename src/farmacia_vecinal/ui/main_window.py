@@ -6,6 +6,7 @@ el resultado. No contiene consultas SQL ni reglas de inventario.
 
 from __future__ import annotations
 
+import logging
 import sys
 from datetime import date
 
@@ -31,6 +32,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..config import configure_logging
 from ..database import DatabaseError, FarmaciaDB
 from ..models import InventoryAlert, Medication, UserSession
 from ..services import (
@@ -54,6 +56,7 @@ TABLE_COLUMNS = [
     "Fecha de Vencimiento",
     "Laboratorio",
 ]
+LOGGER = logging.getLogger(__name__)
 
 
 class FarmaciaComunalApp(QMainWindow):
@@ -500,6 +503,8 @@ def _format_alert(alert: InventoryAlert) -> str:
 
 def run() -> None:
     """Crea la aplicacion Qt y ejecuta su ciclo de eventos."""
+    configure_logging()
+    LOGGER.info("Iniciando interfaz de Farmacia Vecinal")
     application = QApplication(sys.argv)
     application.setFont(QFont("Segoe UI", 10))
     window = FarmaciaComunalApp()
