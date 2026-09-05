@@ -47,6 +47,7 @@ Thumbs.db
 .vscode/launch.json
 .vscode/tasks.json
 .vscode
+uv.lock
 
 # Archivos generados por herramientas de desarrollo
 build/

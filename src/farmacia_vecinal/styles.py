@@ -1,62 +1,30 @@
-# PALETA DE COLORES PRINCIPAL
+"""Define los colores y estilos visuales de la interfaz Qt."""
 
-# Color de fondo principal de toda la aplicación.
+# Colores principales.
+
 COLOR_FONDO = "#0B0F19"         
-# Color secundario usado para tarjetas, cajas de grupo y campos de texto.
 COLOR_SECUNDARIO = "#111827"     
-# Color primario de la aplicación 
 COLOR_PRIMARIO = "#6366F1"       
-# Se usa para el botón de "Ingreso a Bodega" (acciones positivas/éxito).
 COLOR_ACCION = "#10B981"      
-# Se usa para botones de alerta, errores y advertencias.
 COLOR_ALERTA = "#EF4444"     
-# Color de texto principal.
 COLOR_TEXTO = "#F9FAFB"         
 
-# Color de texto secundario o inactivo.
+# Colores secundarios y estados.
 COLOR_TEXTO_SECUNDARIO = "#9CA3AF" 
-# bordes, se usa para bordes de cajas, tablas y separadores.
 COLOR_BORDE = "#1F2937"          
-#==========================================================================
-# COLORES DE HOVER Y SELECCIÓN
-
-# Se aplica cuando el mouse pasa sobre botones primarios.
 COLOR_HOVER_PRIMARIO = "#818CF8" 
-# Se aplica cuando el mouse pasa sobre botones de acción.
 COLOR_HOVER_ACCION = "#34D399"   
-# Se aplica cuando el mouse pasa sobre botones de alerta.
 COLOR_HOVER_ALERTA = "#F87171" 
-# Color de fondo para filas seleccionadas en la tabla 
 COLOR_SELECCION_FONDO = "#312E81" 
-# Color de las barras de scroll 
 COLOR_SCROLLBAR = "#374151"      
-#==========================================================================
-# COLORES ADICIONALES PARA BADGES Y ESTADOS
-
-# Verde oscuro para indicar que el inventario está bien.
-COLOR_BADGE_OK = "#065F46"      
-# Naranja oscuro para indicar que el stock está por agotarse.
-COLOR_BADGE_WARN = "#92400E"     
-# Rojo oscuro para indicar stock crítico o vencimiento próximo
-COLOR_BADGE_CRIT = "#7F1D1D" 
-# Verde muy claro que contrasta bien sobre los fondos oscuros de badges.
-COLOR_BADGE_TEXTO = "#D1FAE5"   
-# Color de fondo para el encabezado de la tabla 
-COLOR_HEADER_GRADIENTE = "#1E293B" # Slate 800
+COLOR_HEADER_GRADIENTE = "#1E293B"
 
 
-# =============================================================================
-# get_stylesheet: Retorna la hoja de estilos QSS completa como un string.
-#Se usa f-string para insertar los valores de los colores
-#definidos arriba dentro del texto QSS.
-#Las llaves dobles {{ }} son necesarias porque en un f-string
-#las llaves simples se interpretan como expresiones Python.
-
-def get_stylesheet():
+def get_stylesheet() -> str:
+    """Devuelve la hoja QSS que usa toda la aplicacion."""
     return f"""
  
 
-   
     QWidget {{
         background-color: {COLOR_FONDO};
         color: {COLOR_TEXTO};
@@ -169,7 +137,6 @@ def get_stylesheet():
         background-color: {COLOR_BORDE};
         color: {COLOR_TEXTO_SECUNDARIO};
     }}
-       - padding: 12px vertical y 24px horizontal (botón más grande). */
     QPushButton#btn_login {{
         background-color: transparent;
         border: 2px solid {COLOR_PRIMARIO};
