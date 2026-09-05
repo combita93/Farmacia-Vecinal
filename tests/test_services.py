@@ -16,15 +16,18 @@ from farmacia_vecinal.services import (
 
 class InventoryServiceTests(unittest.TestCase):
     def setUp(self) -> None:
+        "Valida que el inventario se actualiza correctamente al registrar y entregar medicamentos."
         self.database_path = Path(tempfile.mktemp(suffix=".db"))
         self.database = FarmaciaDB(self.database_path)
         self.inventory = InventoryService(self.database)
 
     def tearDown(self) -> None:
+        "Cierra la conexión a la base de datos y elimina el archivo temporal."
         self.database.close()
         self.database_path.unlink(missing_ok=True)
 
     def test_register_and_deliver_updates_stock(self) -> None:
+        "Valida que el inventario se actualiza correctamente al registrar y entregar medicamentos."
         medication = self.inventory.register(
             Medication(None, "Paracetamol", 10, date(2099, 12, 31), "Demo")
         )
@@ -34,6 +37,7 @@ class InventoryServiceTests(unittest.TestCase):
         self.assertEqual(remaining.quantity, 6)
 
     def test_delivery_cannot_exceed_stock(self) -> None:
+        "Valida que no se puede entregar más medicamentos de los que hay en stock."
         medication = self.inventory.register(
             Medication(None, "Ibuprofeno", 2, date(2099, 12, 31), "Demo")
         )
@@ -42,12 +46,14 @@ class InventoryServiceTests(unittest.TestCase):
             self.inventory.deliver(medication.identifier, 3)
 
     def test_register_rejects_non_positive_quantity(self) -> None:
+        "Valida que no se puede registrar un medicamento con cantidad negativa."
         with self.assertRaises(ValidationError):
             self.inventory.register(
                 Medication(None, "Aspirina", 0, date(2099, 12, 31), "Demo")
             )
 
     def test_authentication_requires_expected_role(self) -> None:
+        "Valida que la autenticación requiere el rol esperado."
         authentication = AuthService(self.database)
 
         session = authentication.authenticate("juan", "1234", "bodega")
