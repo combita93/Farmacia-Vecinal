@@ -128,7 +128,7 @@ def get_stylesheet():
         letter-spacing: 0.5px;
     }}
 
-    QLineEdit {{
+    QLineEdit, QDateEdit {{
         background-color: {COLOR_FONDO};
         border: 1px solid {COLOR_BORDE};
         border-radius: 6px;
